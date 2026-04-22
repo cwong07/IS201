@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital Explorer 🗺️</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #e8dfc8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(90,122,58,0.15) 0%, transparent 50%),
+      radial-gradient(circle at 85% 80%, rgba(242,140,74,0.12) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(200,180,122,0.08) 0%, transparent 70%);
+  }
+
+  .game-wrap {
+    background: #f5f0e8;
+    border-radius: 24px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 8px 40px rgba(60,40,10,0.18), 0 2px 8px rgba(60,40,10,0.10);
+    position: relative;
+  }
+
+  .map-texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image:
+      repeating-linear-gradient(0deg, #5a7a3a 0px, #5a7a3a 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(90deg, #5a7a3a 0px, #5a7a3a 1px, transparent 1px, transparent 40px);
+  }
+
+  .inner { position: relative; z-index: 1; padding: 1.5rem; }
+
+  .header { text-align: center; margin-bottom: 1.25rem; }
+
+  .title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.2rem;
+    color: #3d6b35;
+    letter-spacing: 1px;
+    line-height: 1.1;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+    color: #7a6a50;
+    margin-top: 4px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .scorebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff8ee;
+    border: 2px solid #e8c97a;
+    border-radius: 50px;
+    padding: 0.5rem 1.25rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    font-size: 0.88rem;
+  }
+
+  .score-item { display: flex; align-items: center; gap: 5px; color: #5a4a30; }
+
+  .badge {
+    background: #e8c97a;
+    color: #5a4a30;
+    border-radius: 50px;
+    padding: 1px 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+  }
+
+  .streak-badge { background: #f28c4a; color: #fff; }
+  .lives-badge { background: #e05555; color: #fff; }
+
+  .progress-bar-wrap {
+    background: #e8dcc8;
+    border-radius: 50px;
+    height: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #5a9a3a, #a3c95a);
+    border-radius: 50px;
+    transition: width 0.4s ease;
+  }
+
+  .question-card {
+    background: #fff;
+    border: 2.5px solid #c8b47a;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    box-shadow: 0 4px 0 #c8b47a;
+  }
+
+  .region-tag {
+    display: inline-block;
+    background: #e8f3df;
+    color: #3d6b35;
+    border-radius: 50px;
+    padding: 2px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .question-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #9a8a70;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .country-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.1rem;
+    color: #3d2e1a;
+    line-height: 1.2;
+  }
+
+  .flag-display { font-size: 2.5rem; margin-top: 4px; }
+
+  .hint-row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+
+  .hint-chip {
+    background: #f5f0e8;
+    border: 1.5px solid #d4c49a;
+    border-radius: 50px;
+    padding: 3px 12px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #7a6a50;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .opt-btn {
+    background: #fff;
+    border: 2.5px solid #c8b47a;
+    border-radius: 12px;
+    padding: 0.75rem 0.5rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #3d2e1a;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s, border-color 0.15s, box-shadow 0.1s;
+    box-shadow: 0 3px 0 #c8b47a;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .opt-btn:hover:not(:disabled) {
+    background: #fff8ee;
+    transform: translateY(-2px);
+    border-color: #f28c4a;
+    box-shadow: 0 5px 0 #f28c4a;
+  }
+
+  .opt-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 #c8b47a; }
+
+  .opt-btn.correct {
+    background: #e8f3df !important;
+    border-color: #5a9a3a !important;
+    box-shadow: 0 3px 0 #5a9a3a !important;
+    color: #2d5a1a !important;
+  }
+
+  .opt-btn.wrong {
+    background: #fde8e8 !important;
+    border-color: #e05555 !important;
+    box-shadow: 0 3px 0 #e05555 !important;
+    color: #9a2a2a !important;
+    text-decoration: line-through;
+  }
+
+  .opt-btn:disabled { cursor: default; }
+
+  .feedback-bar {
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .feedback-bar.correct { background: #e8f3df; color: #2d5a1a; border: 2px solid #5a9a3a; }
+  .feedback-bar.wrong { background: #fde8e8; color: #9a2a2a; border: 2px solid #e05555; }
+  .feedback-bar.idle { background: #f5f0e8; color: #9a8a70; border: 2px dashed #d4c49a; }
+
+  .next-btn {
+    width: 100%;
+    background: #f28c4a;
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #c0622a;
+    transition: transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 1px;
+  }
+
+  .next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #c0622a; }
+  .next-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c0622a; }
+
+  .end-screen { text-align: center; padding: 2rem 1rem; }
+  .end-icon { font-size: 4rem; margin-bottom: 0.5rem; }
+  .end-title { font-family: 'Fredoka One', cursive; font-size: 2rem; color: #3d6b35; margin-bottom: 0.5rem; }
+  .end-score { font-size: 1.05rem; color: #5a4a30; font-weight: 700; margin-bottom: 0.75rem; }
+  .end-grade { font-family: 'Fredoka One', cursive; font-size: 3.5rem; color: #f28c4a; margin-bottom: 1rem; }
+
+  .end-stats {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-chip {
+    background: #fff8ee;
+    border: 2px solid #e8c97a;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #5a4a30;
+    text-align: center;
+  }
+
+  .stat-chip span {
+    display: block;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    color: #3d6b35;
+  }
+
+  .play-again-btn {
+    background: #3d6b35;
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem 2.5rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #255020;
+    letter-spacing: 1px;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  .play-again-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #255020; }
+  .play-again-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #255020; }
+
+  @keyframes popIn {
+    0% { transform: scale(0.85); opacity: 0; }
+    70% { transform: scale(1.04); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .pop { animation: popIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+<div class="game-wrap">
+  <div class="map-texture"></div>
+  <div class="inner">
+    <div class="header">
+      <div class="title">🗺️ Capital Explorer</div>
+      <div class="subtitle">Guess the Capital City!</div>
+    </div>
+    <div id="app"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {country:"France",capital:"Paris",flag:"🇫🇷",region:"Europe",hint:"City of Light on the Seine",continent:"EU"},
+  {country:"Japan",capital:"Tokyo",flag:"🇯🇵",region:"Asia",hint:"World's most populous metro area",continent:"AS"},
+  {country:"Brazil",capital:"Brasília",flag:"🇧🇷",region:"South America",hint:"Purpose-built city, opened in 1960",continent:"SA"},
+  {country:"Australia",capital:"Canberra",flag:"🇦🇺",region:"Oceania",hint:"Not Sydney or Melbourne!",continent:"OC"},
+  {country:"Egypt",capital:"Cairo",flag:"🇪🇬",region:"Africa",hint:"Near the famous pyramids",continent:"AF"},
+  {country:"Canada",capital:"Ottawa",flag:"🇨🇦",region:"North America",hint:"On the Ottawa River",continent:"NA"},
+  {country:"Germany",capital:"Berlin",flag:"🇩🇪",region:"Europe",hint:"Has a famous wall history",continent:"EU"},
+  {country:"India",capital:"New Delhi",flag:"🇮🇳",region:"Asia",hint:"A planned city within a larger city",continent:"AS"},
+  {country:"Argentina",capital:"Buenos Aires",flag:"🇦🇷",region:"South America",hint:"The Paris of South America",continent:"SA"},
+  {country:"South Africa",capital:"Pretoria",flag:"🇿🇦",region:"Africa",hint:"Administrative capital — one of three!",continent:"AF"},
+  {country:"Russia",capital:"Moscow",flag:"🇷🇺",region:"Europe/Asia",hint:"Home of the Kremlin & Red Square",continent:"EU"},
+  {country:"Mexico",capital:"Mexico City",flag:"🇲🇽",region:"North America",hint:"Built on a former Aztec island",continent:"NA"},
+  {country:"Italy",capital:"Rome",flag:"🇮🇹",region:"Europe",hint:"The Eternal City",continent:"EU"},
+  {country:"China",capital:"Beijing",flag:"🇨🇳",region:"Asia",hint:"Home of the Forbidden City",continent:"AS"},
+  {country:"New Zealand",capital:"Wellington",flag:"🇳🇿",region:"Oceania",hint:"At the bottom of the North Island",continent:"OC"},
+  {country:"Nigeria",capital:"Abuja",flag:"🇳🇬",region:"Africa",hint:"Replaced Lagos as capital in 1991",continent:"AF"},
+  {country:"Spain",capital:"Madrid",flag:"🇪🇸",region:"Europe",hint:"Highest-altitude capital in the EU",continent:"EU"},
+  {country:"Thailand",capital:"Bangkok",flag:"🇹🇭",region:"Asia",hint:"Locals call it Krung Thep",continent:"AS"},
+  {country:"Peru",capital:"Lima",flag:"🇵🇪",region:"South America",hint:"Pacific coast desert city",continent:"SA"},
+  {country:"Morocco",capital:"Rabat",flag:"🇲🇦",region:"Africa",hint:"Not Casablanca!",continent:"AF"},
+  {country:"Portugal",capital:"Lisbon",flag:"🇵🇹",region:"Europe",hint:"City of Seven Hills",continent:"EU"},
+  {country:"South Korea",capital:"Seoul",flag:"🇰🇷",region:"Asia",hint:"Home of K-pop culture",continent:"AS"},
+  {country:"Colombia",capital:"Bogotá",flag:"🇨🇴",region:"South America",hint:"High-altitude Andean capital",continent:"SA"},
+  {country:"Sweden",capital:"Stockholm",flag:"🇸🇪",region:"Europe",hint:"Built across 14 islands",continent:"EU"},
+  {country:"Kenya",capital:"Nairobi",flag:"🇰🇪",region:"Africa",hint:"Safari gateway — Swahili for 'cool water'",continent:"AF"},
+  {country:"Turkey",capital:"Ankara",flag:"🇹🇷",region:"Europe/Asia",hint:"Not Istanbul!",continent:"EU"},
+  {country:"Indonesia",capital:"Jakarta",flag:"🇮🇩",region:"Asia",hint:"Being replaced by Nusantara",continent:"AS"},
+  {country:"Chile",capital:"Santiago",flag:"🇨🇱",region:"South America",hint:"Backed by the Andes mountains",continent:"SA"},
+  {country:"Greece",capital:"Athens",flag:"🇬🇷",region:"Europe",hint:"Birthplace of democracy & the Acropolis",continent:"EU"},
+  {country:"Saudi Arabia",capital:"Riyadh",flag:"🇸🇦",region:"Asia",hint:"Heart of the Arabian Peninsula",continent:"AS"},
+  {country:"Ghana",capital:"Accra",flag:"🇬🇭",region:"Africa",hint:"On the Gulf of Guinea",continent:"AF"},
+  {country:"Netherlands",capital:"Amsterdam",flag:"🇳🇱",region:"Europe",hint:"City of canals and tulips",continent:"EU"},
+  {country:"Philippines",capital:"Manila",flag:"🇵🇭",region:"Asia",hint:"On Manila Bay, Luzon island",continent:"AS"},
+  {country:"Bolivia",capital:"La Paz",flag:"🇧🇴",region:"South America",hint:"World's highest-altitude capital",continent:"SA"},
+  {country:"Cuba",capital:"Havana",flag:"🇨🇺",region:"North America",hint:"Caribbean island capital with vintage cars",continent:"NA"},
+  {country:"Norway",capital:"Oslo",flag:"🇳🇴",region:"Europe",hint:"At the end of a fjord",continent:"EU"},
+  {country:"Pakistan",capital:"Islamabad",flag:"🇵🇰",region:"Asia",hint:"Purpose-built city from the 1960s",continent:"AS"},
+  {country:"Ethiopia",capital:"Addis Ababa",flag:"🇪🇹",region:"Africa",hint:"African Union headquarters",continent:"AF"},
+  {country:"Denmark",capital:"Copenhagen",flag:"🇩🇰",region:"Europe",hint:"Home of The Little Mermaid statue",continent:"EU"},
+  {country:"Vietnam",capital:"Hanoi",flag:"🇻🇳",region:"Asia",hint:"Not Ho Chi Minh City!",continent:"AS"},
+];
+
+const DISTRACTORS = {
+  EU: ["Paris","Berlin","Rome","Madrid","Athens","Lisbon","Vienna","Brussels","Budapest","Warsaw","Prague","Dublin","Helsinki","Oslo","Stockholm","Copenhagen","Amsterdam","Ankara","Moscow","Bucharest","Sofia","Bern","Tallinn","Riga","Vilnius","Bratislava","Ljubljana","Belgrade","Zagreb","Podgorica","Skopje","Tirana","Sarajevo","Reykjavik","Nicosia","Valletta","Minsk","Kiev"],
+  AS: ["Tokyo","Beijing","Seoul","Bangkok","Jakarta","Manila","Hanoi","Islamabad","New Delhi","Riyadh","Tehran","Baghdad","Kabul","Dhaka","Kathmandu","Naypyidaw","Vientiane","Phnom Penh","Kuala Lumpur","Ulaanbaatar","Tashkent","Baku","Tbilisi","Yerevan","Amman","Damascus","Beirut","Abu Dhabi","Doha","Kuwait City","Muscat","Colombo","Thimphu","Dili","Male"],
+  AF: ["Cairo","Nairobi","Addis Ababa","Abuja","Accra","Rabat","Pretoria","Tunis","Algiers","Tripoli","Khartoum","Dakar","Bamako","Niamey","Ouagadougou","Conakry","Freetown","Abidjan","Lomé","Cotonou","Yaoundé","Bangui","Kinshasa","Luanda","Lusaka","Harare","Maputo","Antananarivo","Windhoek","Gaborone","Maseru","Lilongwe","Dodoma","Kampala","Kigali","Djibouti","Mogadishu","Juba","Ndjamena","Libreville","Malabo"],
+  NA: ["Ottawa","Washington D.C.","Mexico City","Havana","Kingston","Nassau","Bridgetown","Port of Spain","Santo Domingo","Port-au-Prince","Belmopan","Guatemala City","Tegucigalpa","Managua","San José","Panama City"],
+  SA: ["Brasília","Bogotá","Lima","Buenos Aires","Santiago","La Paz","Asunción","Montevideo","Quito","Caracas","Georgetown","Paramaribo"],
+  OC: ["Canberra","Wellington","Port Moresby","Suva","Honiara","Port Vila","Funafuti","Tarawa","Apia","Nuku'alofa","Palikir","Majuro"],
+};
+
+const TOTAL = 10;
+let questions=[], qIdx=0, score=0, lives=3, streak=0, bestStreak=0, answered=false, chosen=null, options=[];
+
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function getOptions(q){
+  const pool=(DISTRACTORS[q.continent]||[]).filter(c=>c!==q.capital);
+  return shuffle([q.capital,...shuffle(pool).slice(0,3)]);
+}
+
+function initGame(){
+  questions=shuffle(ALL_QUESTIONS).slice(0,TOTAL);
+  qIdx=0;score=0;lives=3;streak=0;bestStreak=0;answered=false;chosen=null;
+  render();
+}
+
+function handleAnswer(opt){
+  if(answered)return;
+  answered=true; chosen=opt;
+  const q=questions[qIdx];
+  if(opt===q.capital){score++;streak++;if(streak>bestStreak)bestStreak=streak;}
+  else{lives--;streak=0;}
+  render();
+}
+
+function nextQuestion(){
+  qIdx++;answered=false;chosen=null;render();
+}
+
+function getGrade(pct){
+  if(pct>=0.9)return{icon:"🏆",label:"Expert Explorer!",grade:"A+"};
+  if(pct>=0.8)return{icon:"🌟",label:"Seasoned Traveler!",grade:"A"};
+  if(pct>=0.7)return{icon:"🗺️",label:"Adventure Ready!",grade:"B"};
+  if(pct>=0.5)return{icon:"🧭",label:"Getting There!",grade:"C"};
+  return{icon:"🏕️",label:"Keep Exploring!",grade:"D"};
+}
+
+function render(){
+  const app=document.getElementById('app');
+  const gameOver=lives<=0||qIdx>=TOTAL;
+
+  if(gameOver){
+    const g=getGrade(score/TOTAL);
+    app.innerHTML=`
+      <div class="end-screen pop">
+        <div class="end-icon">${g.icon}</div>
+        <div class="end-title">${g.label}</div>
+        <div class="end-grade">${g.grade}</div>
+        <div class="end-stats">
+          <div class="stat-chip"><span>${score}/${TOTAL}</span>Score</div>
+          <div class="stat-chip"><span>${bestStreak}</span>Best Streak</div>
+          <div class="stat-chip"><span>${Math.round(score/TOTAL*100)}%</span>Accuracy</div>
+        </div>
+        <button class="play-again-btn" onclick="initGame()">🌍 Play Again</button>
+      </div>`;
+    return;
+  }
+
+  const q=questions[qIdx];
+  if(!answered) options=getOptions(q);
+  const livesIcons="❤️".repeat(lives)+"🖤".repeat(3-lives);
+
+  let feedbackHTML='';
+  if(!answered){
+    feedbackHTML=`<div class="feedback-bar idle">Choose the correct capital city!</div>`;
+  } else if(chosen===q.capital){
+    feedbackHTML=`<div class="feedback-bar correct">✅ Correct!${streak>1?' 🔥 Streak x'+streak:''} Nice one!</div>`;
+  } else {
+    feedbackHTML=`<div class="feedback-bar wrong">❌ It's <strong>${q.capital}</strong> — keep going!</div>`;
+  }
+
+  const optsBtns=options.map(opt=>`
+    <button class="opt-btn${answered?(opt===q.capital?' correct':opt===chosen?' wrong':''):''}"
+      onclick="handleAnswer('${opt.replace(/'/g,"\\'")}')"
+      ${answered?'disabled':''}>${opt}</button>`).join('');
+
+  app.innerHTML=`
+    <div class="scorebar">
+      <div class="score-item">🧭 Q ${qIdx+1}/${TOTAL}</div>
+      <div class="score-item">⭐ <span class="badge">${score}</span></div>
+      <div class="score-item">🔥 <span class="badge streak-badge">${streak}</span></div>
+      <div class="score-item">${livesIcons}</div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-fill" style="width:${(qIdx/TOTAL)*100}%"></div></div>
+    <div class="question-card pop">
+      <div class="region-tag">${q.region}</div>
+      <div class="question-label">What is the capital of...</div>
+      <div class="country-name">${q.country}</div>
+      <div class="flag-display">${q.flag}</div>
+      <div class="hint-row"><div class="hint-chip">💡 ${q.hint}</div></div>
+    </div>
+    <div class="options-grid">${optsBtns}</div>
+    ${feedbackHTML}
+    ${answered?`<button class="next-btn" onclick="nextQuestion()">${qIdx+1>=TOTAL||lives<=0?'🏁 See Results':'Next Country →'}</button>`:''}`;
+}
+
+initGame();
+</script>
+</body>
+</html>
